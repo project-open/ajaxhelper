@@ -1,0 +1,40 @@
+div.suggestions {
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    border: 1px solid black;
+    position: absolute;   
+    background-color: white;
+}
+
+div.suggestions div {
+    cursor: default;
+    padding: 0px 3px;
+    width: 350px;
+    overflow: hidden;
+}
+
+div.suggestions div span.sname {
+    float: left;
+    font-size: 13px;
+    margin-left: 4px;
+    border: 0px;
+}
+
+div.suggestions div span.sdesc {
+    float: right;
+    font-size: 10px;
+    margin-left: 3px;
+    padding-top: 2px;
+    color: #008000;
+    border: 0px;
+}
+
+div.suggestions div.current {
+    background-color: #3366cc;
+    color: white;
+}
+
+div.suggestions div.current span {
+    background-color: #3366cc;
+    color: white;
+}

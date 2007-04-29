@@ -1,0 +1,286 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>Ajax Helper</title>
+  <style>
+  body { font-family:arial; }.style1 {color: #000066}
+  .style2 {color: #666666}
+  .style3 {color: #999999}
+  </style>
+</head>
+<body>
+<h1>Ajax Helper</h1>
+<p>Hamilton G. Chua (ham@solutiongrove.com)<br>
+  November 2006<br>
+  v0.8d<br>
+  <br>
+  <span style="font-weight: bold;">Components :</span><br>
+  Prototype v1.5.0_rc_1 (<a href="http://prototype.conio.net/">http://prototype.conio.net/</a>)<br>
+  Scriptaculous v1.6.4 (<a href="http://script.aculo.us/">http://script.aculo.us/</a>)<br>
+  
+Overlibmws (<a href="http://www.macridesweb.com/oltest/">http://www.macridesweb.com/oltest/</a>)<br>
+Curvey Corners (<a href="http://www.curvycorners.net/">http://www.curvycorners.net/</a>) <br>
+Yahoo User Interface Library 0.11.4 (<a href="http://developer.yahoo.com/yui/">http://developer.yahoo.com/yui/</a>)<br>
+Dojo Toolkit
+ 0.4 (<a href="http://dojotoolkit.com">http://dojotoolkit.com</a>) <br>
+  <br>
+  <br>
+  <span style="font-weight: bold;">Introduction :<br>
+  <br>
+  </span>The Ajax Helper package provides TCL API to generate the
+  javascript from the above components to enable their various features
+  for use in OpenACS applications.
+  The motivation for this package is to easily enable Web 2.0 like
+  features in OpenACS applications using the most popular javascript
+  libraries.<br>
+  <br>
+  <span style="font-weight: bold;">Prerequisites :<br>
+  <br>
+  </span>The ajax helper package must be installed and mounted in /ajax
+  to be able ot use these features. The installer should automatically
+  mount the ajax helper in /ajax upon installation of the package. <span style="font-weight: bold;"><br>
+  </span><br>
+<span style="font-weight: bold;">Javascript Sources :</span></p>
+<p>As of version 0.8d, required javascript sources will be loaded automatically depending on the wrapper function used. The following piece of code must be present in the blank-master.tcl template file to make this automated loading of javascript source files possible.</p>
+<p>TCL File (blank-master.tcl) :</p>
+<pre><span class="style3">
+if { ![info exists header_stuff] } {
+    set header_stuff {} 
+}</span><span class="style1">
+
+# HAM : lets check ajaxhelper globals ***********************
+
+global ajax_helper_js_sources
+global ajax_helper_yui_js_sources
+global ajax_helper_dojo_js_sources
+set js_sources ""
+
+if { [info exists ajax_helper_js_sources] || [info exists ajax_helper_yui_js_sources] || [info exists ajax_helper_dojo_js_sources] } {
+
+	# if we're using ajax, let's use doc_type strict so we can get
+	# consistent results accross standards compliant browsers
+	set doc_type { &#60;!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"&#62; }
+
+	if { [info exists ajax_helper_js_sources] } {
+		append js_sources [ah::load_js_sources -source_list $ajax_helper_js_sources]
+	}
+
+	if { [info exists ajax_helper_yui_js_sources] } {
+		append js_sources [ah::yui::load_js_sources -source_list $ajax_helper_yui_js_sources]
+	}
+
+	if { [info exists ajax_helper_dojo_js_sources] } {
+		append js_sources [ah::dojo::load_js_sources -source_list $ajax_helper_dojo_js_sources]
+	}
+}
+
+# ***********************************************************</span>
+
+<span class="style2"># Attributes
+
+multirow create attribute key value
+set onload {}</span>
+</pre>
+<p>ADP File (blank-master.adp):</p>
+<p>	<span class="style1">@js_sources;noquote@</span><br>
+  <span class="style3">@header_stuff;noquote@</span></p>
+<p>Automated loading will work only if you are using a wrapper script. </p>
+<p>Alternatively if you wish to have more control of what javascript sources are loaded, you can still use the ah::js_sources procedure. </p>
+<p>  To have the ajax helper generate
+  the javascript declaration ....<br>
+  <br>
+  TCL File (e.g blank-master.tcl) :<br>
+  <br>
+&nbsp;&nbsp;&nbsp; set ah_sources [ah::js_sources -default]<br>
+  <br>
+  ADP File (eg. blank-master.adp):<br>
+  <br>
+&nbsp;&nbsp;&nbsp; @ah_sources;noquote@<br>
+  <br>
+  Compiled Template:<br>
+  <br>
+  &lt;<span class="start-tag">script</span><span
+ class="attribute-name"> type</span>=<span class="attribute-value">"text/javascript" </span><span
+ class="attribute-name">src</span>=<span class="attribute-value">"/ajax/prototype/prototype.js"</span>&gt;&lt;/<span
+ class="end-tag">script</span>&gt; <br>
+  &lt;<span class="start-tag">script</span><span
+ class="attribute-name"> type</span>=<span class="attribute-value">"text/javascript" </span><span
+ class="attribute-name">src</span>=<span class="attribute-value">"/ajax/scriptaculous/builder.js"</span>&gt;&lt;/<span
+ class="end-tag">script</span>&gt; <br>
+  &lt;<span class="start-tag">script</span><span
+ class="attribute-name"> type</span>=<span class="attribute-value">"text/javascript" </span><span
+ class="attribute-name">src</span>=<span class="attribute-value">"/ajax/scriptaculous/controls.js"</span>&gt;&lt;/<span
+ class="end-tag">script</span>&gt; <br>
+  &lt;<span class="start-tag">script</span><span
+ class="attribute-name"> type</span>=<span class="attribute-value">"text/javascript" </span><span
+ class="attribute-name">src</span>=<span class="attribute-value">"/ajax/scriptaculous/dragdrop.js"</span>&gt;&lt;/<span
+ class="end-tag">script</span>&gt; <br>
+  &lt;<span class="start-tag">script</span><span
+ class="attribute-name"> type</span>=<span class="attribute-value">"text/javascript" </span><span
+ class="attribute-name">src</span>=<span class="attribute-value">"/ajax/scriptaculous/effects.js"</span>&gt;&lt;/<span
+ class="end-tag">script</span>&gt; <br>
+  &lt;<span class="start-tag">script</span><span
+ class="attribute-name"> type</span>=<span class="attribute-value">"text/javascript" </span><span
+ class="attribute-name">src</span>=<span class="attribute-value">"/ajax/scriptaculous/slider.js"</span>&gt;&lt;/<span
+ class="end-tag">script</span>&gt;<br>
+  &lt;<span class="start-tag">script</span><span
+ class="attribute-name"> type</span>=<span class="attribute-value">"text/javascript" </span><span
+ class="attribute-name">src</span>=<span class="attribute-value">"/ajax/scriptaculous/scriptaculous.js"</span>&gt;&lt;/<span
+ class="end-tag">script</span>&gt;<br>
+  <br>The above TCL API generates the <span style="font-style: italic;">default</span>
+sources that must be declared for you to be able to use the javascript
+libraries <br>
+<br>
+
+To generate the javscript sources for Overlibmws :<br>
+<br>
+&nbsp;&nbsp;&nbsp; set ah_sources [ah::js_sources -source "overlibmws"]<br>
+<br>
+The functions that are responsible for rounded corners has been
+extracted into rounded.js to work with scriptaculous. <br>
+
+<br>
+&nbsp;&nbsp;&nbsp; set ah_sources [ah::js_sources -source "rounder"]<br>
+<br>
+NOTE :<br>
+<br>
+You can combine sources by specifying them in the source parameter separated by commas. <br>
+<br>
+
+&nbsp;set ah_sources [ah::js_sources -source
+"default,overlibmws"]<br>
+<br>
+The above code will generate the overlibmws javascript source
+declaration with the default declarations.<br>
+<br>
+<br>
+<span style="font-weight: bold;">Ajax Procedures :<br>
+<br>
+Prototype</span> has a pair of javascript functions that alllow
+programmers to use XMLHTTP. The ajax.updater and ajax.request
+functions. See <a
+ href="http://wiki.script.aculo.us/scriptaculous/show/Ajax.Updater">http://wiki.script.aculo.us/scriptaculous/show/Ajax.Updater</a>
+and <a
+ href="http://wiki.script.aculo.us/scriptaculous/show/Ajax.Request">http://wiki.script.aculo.us/scriptaculous/show/Ajax.Request</a>
+for more information about these javascript functions.<br>
+<br>
+The TCL API is used like this<br>
+<br>
+&nbsp;&nbsp;&nbsp; set request [ah::ajaxrequest -url
+"/url/to/call"&nbsp; \<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp; -pars
+"parameter1=parameter_value&amp;parameter1=parameter_value"&nbsp; ]<br>
+<br>
+The above api will generate an ajax.request javascript function that is
+best placed in an&nbsp; event like "onClick".<br>
+<br>
+&nbsp;&nbsp;&nbsp; &lt;a href="#" onClick="@request;noquote@"&gt;<br>
+<br>
+Consult the api-doc for more information about other parameters you can
+pass on to the ah::ajaxrequest proc.<br>
+<br>
+The ah::ajaxrequest will make an xmlhttp call but does not do anything
+about the response. To update content based on the response from an
+xmlhttp request, use ah::ajaxupdate. This procedure will not only make
+an xmlhttp call but update the contents of a div or layer with the
+response text of the xmlhttp request.<br>
+<br>
+Here's an example :<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; set js_update_connections
+[ah::ajaxupdate -container "connections"&nbsp; \<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; -url "/url/to/call" \<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; -enclose&nbsp; \<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; -pars
+"'effects=$effects&amp;limit_n=$limit_n'"&nbsp; \<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
+-effect "Fade" \<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; -effectopts "duration: 0.5"]<br>
+<br>
+On the adp side, you can just put<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @js_update_connections;noquote@<br>
+<br>
+The "-enclose" parameter tells the procedure to enclose the resulting
+script in script tags &lt;script&gt;&lt;/script&gt;. This is another
+option in addition to putting the scripts in html event attributes like
+onClick, onMouseover or onChange.<br>
+<br>
+The "-pars" parameter is where you pass the querystring that you want
+to send along with the xmlhttp request. Notice that it takes the form
+of a querystring that you normally see in the address bar of your
+browser. Use this to pass values to the URL you are making an xmlhttp
+request to.<br>
+<br>
+The "-effect" parameter is an optional parameter that allows you to
+specify the effect you want to execute after the container's content
+has been updated.<br>
+<br>
+<span style="font-weight: bold;">Cinematic Effects :<br>
+<br>
+</span>Use ah::effects to generate javascript that allows you to
+implement transitional and cinematic effects to html elements. You will
+need to consult the scriptaculous documentation
+http://wiki.script.aculo.us/scriptaculous/tags/effects to know what
+kinds of
+effects and what kinds of options you can pass to the effect script.<br>
+<br>
+The procedure is called in this manner :<br>
+<br>
+&nbsp;&nbsp;&nbsp; set effect [ah::effect -element "container" <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
+-effect "Fade" <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -options "duration: 1.5"]<br>
+NOTE :<br>
+The Effect name and the options are case sensitive.<br>
+<span style="font-weight: bold;"><br>
+</span><span style="font-weight: bold;"><br>
+DHTML Callouts :<br>
+<br>
+</span>There is currently basic support for overlibmws. Right now we
+are able to create bubble type call outs.<br>
+<br>
+In your tcl file ...<br>
+<br>
+&nbsp;&nbsp; set onmouseover [ah::bubblecallout -text " Contents of My
+Popup" ]<br>
+<br>
+The adp file should have something like this ....<br>
+&nbsp;&nbsp; <br>
+&nbsp;&nbsp; &lt;a href="#" @onmouseover;noquote@ &gt;Link with
+Popup&lt;/a&gt;<br>
+<br>
+<span style="font-weight: bold;">Drag and Drop Sortables :<br>
+<br>
+</span>Sortables are documented in the scriptaculous wiki <a
+ href="http://wiki.script.aculo.us/scriptaculous/show/Sortables">http://wiki.script.aculo.us/scriptaculous/show/Sortables.</a><br>
+For sortables to work you will need to define a container which will
+hold the elements you want to be sortable.<br>
+<br>
+Here is what the script looks like<br>
+<br>
+&nbsp;&nbsp;&nbsp; append scripts [ah::sortable -element "container" <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp; -options
+"tag:'div',only:'portlet',overlap:'horizontal',constraint:false,ghosting:false"]<br>
+<br>
+You adp page should contain a div with id attribute container. This "container" should have subcontainers which the above script will make
+sortable.</p>
+</body>
+</html>
