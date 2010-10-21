@@ -85,7 +85,7 @@ ad_proc -private ah::dojo::requires {
             lappend ajax_helper_dojo_js_sources $source
         } else {
             # TODO : we must return an error/exception, for now just add a notice in the log
-            ns_log Notice "AJAXHELPER dojo: $source is already loaded or not valid"
+            ns_log debug "AJAXHELPER dojo: $source is already loaded or not valid"
         }
     }
 }
@@ -93,7 +93,7 @@ ad_proc -private ah::dojo::requires {
 ad_proc -private ah::dojo::is_js_sources_loaded {
 	-js_source
 } {
-	This proc will loops thru source_list and check for the presence of js_source.
+	This proc will loop thru source_list and check for the presence of js_source.
 	If found, this proc will return 1
 	If not found, this proc will return 0
 
@@ -219,30 +219,6 @@ ad_proc -public ah::dojo::iobind {
     ah::dojo::requires -sources "dojo,io"
 	set script "dojo.io.bind($objargs); "
 	return $script
-}
-
-ad_proc -public ah::dojo::util_list_to_json {
-    -lists_of_pairs
-} {
-    Converts a properly structured list of lists into JSON format.
-        The list of lists may look something like
-
-            set data [list]
-            lappend data [list [list "x" "1"] [list "y" "10"] ]
-            lappend data [list [list "x" "5"] [list "y" "20"] ]
-
-        each line represents a row composed of lists.
-        Each list in the row holds a pair that will be joined by ":".
-} {
-    set rows [list]
-    foreach row $lists_of_pairs {
-        set pairs [list]
-        foreach pair $row {
-            lappend pairs [join $pair ":"]
-        }
-        lappend rows [join $pairs ","]
-    }
-    return "\{[join $rows "\},\{"]\}"
 }
 
 ad_proc -public ah::dojo::collections_store {

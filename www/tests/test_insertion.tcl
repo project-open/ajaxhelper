@@ -1,1 +1,1 @@
-set script [ah::insert -element "maindiv" -text " quick brown fox" -position "Bottom"]
+set script [ah::insert -element "maindiv" -text " lazy dog" -position "Bottom"]

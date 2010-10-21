@@ -14,7 +14,6 @@ lappend nodes [list "fld21" "Folder 2.1" "tree" "" "fld2" "" ""]
 lappend nodes [list "fld22" "Folder 2.2" "tree" "" "fld2" "" ""]
 
 # generate the javascript
-set js_script [ah::yui::create_tree -element "folders" \
+ah::yui::create_tree -element "folders" \
 		-nodes $nodes \
-		-varname "tree" \
-        -enclose ]
+		-varname "tree"

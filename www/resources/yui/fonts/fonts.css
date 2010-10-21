@@ -1,31 +1,56 @@
 /*
-Copyright (c) 2006, Yahoo! Inc. All rights reserved.
+Copyright (c) 2009, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 0.12.1
+version: 2.7.0
 */
+/**
+ * YUI Fonts
+ * @module fonts
+ * @namespace yui-
+ * @requires 
+ */
 
 /**
- * 84.5% for !IE, keywords for IE to preserve user font-size adjustment
  * Percents could work for IE, but for backCompat purposes, we are using keywords.
  * x-small is for IE6/7 quirks mode.
- *
  */
-body {font:13px arial,helvetica,clean,sans-serif;*font-size:small;*font:x-small;}
-table {font-size:inherit;font:100%;}
+body {
+	font:13px/1.231 arial,helvetica,clean,sans-serif;
+	/* for IE6/7 */ 
+	*font-size:small; 
+	/* for IE Quirks Mode */
+	*font:x-small; 
+}
 
 /**
- * 99% for safari; 100% is too large
- */
-select, input, textarea {font:99% arial,helvetica,clean,sans-serif;}
+ * Nudge down to get to 13px equivalent for these form elements
+ */ 
+select,
+input,
+button,
+textarea,
+button {
+	font:99% arial,helvetica,clean,sans-serif;
+}
 
 /**
- * Bump up !IE to get to 13px equivalent
+ * To help tables remember to inherit
  */
-pre, code {font:115% monospace;*font-size:100%;}
+table {
+	font-size:inherit;
+	font:100%;
+}
 
 /**
- * Default line-height based on font-size rather than "computed-value"
- * see: http://www.w3.org/TR/CSS21/visudet.html#line-height
+ * Bump up IE to get to 13px equivalent for these fixed-width elements
  */
-body * {line-height:1.22em;}
+pre,
+code,
+kbd,
+samp,
+tt {
+	font-family:monospace;
+	*font-size:108%;
+	line-height:100%;
+}

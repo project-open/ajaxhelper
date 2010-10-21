@@ -8,126 +8,61 @@ ad_library {
 
 namespace eval ah { }
 
+# ********** Use the acs-subsite extra headers callback to load ajaxhelper scripts ******************
+
+ad_proc -public -callback subsite::get_extra_headers -impl my_implementation {} {
+    replaces the ajaxhelper-template include
+} {
+
+    global ajax_helper_js_sources
+    global ajax_helper_yui_js_sources
+    global ajax_helper_dojo_js_sources
+    global ajax_helper_custom_scripts
+    global ajax_helper_init_scripts
+    
+    set js_sources ""
+    set init_body ""
+    
+    if { [info exists ajax_helper_js_sources] } {
+        append js_sources [ah::load_js_sources -source_list $ajax_helper_js_sources]
+    }
+    
+    if { [info exists ajax_helper_yui_js_sources] } {
+    
+        append js_sources [ah::yui::load_js_sources -source_list $ajax_helper_yui_js_sources]
+    
+        # Yahoo has implemented a theming system, to make the css work, a class must be added
+        #  to the body of the page before any widget is rendered
+        append init_body [ah::yui::cssclass \
+                -varname "yuiclass" \
+                -action "add" \
+                -element "document.body" \
+                -classname "yui-skin-sam" \
+                -element_is_var ]
+    }
+    
+    if { [info exists ajax_helper_dojo_js_sources] } {
+        append js_sources [ah::dojo::load_js_sources -source_list $ajax_helper_dojo_js_sources]
+    }
+    
+    if { ![info exists ajax_helper_custom_scripts] } { set ajax_helper_custom_scripts "" }
+    if { [info exists ajax_helper_init_scripts] } { append init_body $ajax_helper_init_scripts } 
+    
+    set js_init_script [ah::create_js_function -name "ah_page_init" -body ${init_body}]
+    
+    set script "
+    ${js_init_script}
+    ${ajax_helper_custom_scripts}
+    "
+
+    set js_sources "[ah::enclose_in_script -script ${script}] $js_sources"
+
+    return $js_sources
+
+} 
+
+
 # ********* Loading Sources **********
-
-ad_proc -private ah::load_js_sources {
-	-source_list
-} {
-        Accepts a tcl list of sources to load.
-        This source_list will be the global ajax_helper_js_sources variable.
-        This script is called in the blank-master template and
-                should preferrably NOT BE USED to load your
-                javascript sources. Use ah::js_sources instead.
-
-        @author Hamilton Chua (ham@solutiongrove.com)
-        @creation-date 2006-11-05
-        @param source_list The list of javascript source names to load
-} {
-	set ah_base_url [ah::get_url]
-	set script ""
-    set minsuffix ""
-    if { [parameter::get_from_package_key -package_key "ajaxhelper" -parameter "UseMinifiedJs"] == 1 } {
-        set minsuffix "-min"
-    }
-
-    # TODO : 12/19/06
-    # Prior to just loading, we also have to think about dependencies
-    # we might need to sort the source_list first and check for dependencies.
-    # For example, we need to load prototype first before scriptaculous.
-
-	foreach source $source_list {
-        switch $source {
-            "rounder" {
-                append script "<script type=\"text/javascript\" src=\"${ah_base_url}curvycorners/rounded_corners_lite.inc.js\"></script> \n"
-            }
-            "overlibmws" {
-                append script "<script type=\"text/javascript\" src=\"${ah_base_url}overlibmws/overlibmws${minsuffix}.js\"></script> \n"
-            }
-            "overlibmws_bubble" {
-                append script "<script type=\"text/JavaScript\">var OLbubbleImageDir=\"${ah_base_url}overlibmws\";</script>\n"
-                append script "<script type=\"text/javascript\" src=\"${ah_base_url}overlibmws/overlibmws_bubble${minsuffix}.js\"></script>\n"
-            }
-            "overlibmws_scroll" {
-                append script "<script type=\"text/javascript\" src=\"${ah_base_url}overlibmws/overlibmws_scroll${minsuffix}.js\"></script>\n"
-            }
-            "overlibmws_drag" {
-                append script "<script type=\"text/javascript\" src=\"${ah_base_url}overlibmws/overlibmws_draggable${minsuffix}.js\"></script>\n"
-            }
-            "prototype" {
-                append script "<script type=\"text/javascript\" src=\"${ah_base_url}prototype/prototype${minsuffix}.js\"></script> \n"
-            }
-            "scriptaculous" {
-                append script "<script type=\"text/javascript\" src=\"${ah_base_url}scriptaculous/scriptaculous.js\"></script> \n"
-            }
-            "scriptaculous-effects" {
-                append script "<script type=\"text/javascript\" src=\"${ah_base_url}scriptaculous/scriptaculous.js?load=effects\"></script> \n"
-            }
-            "scriptaculous-dragdrop" {
-                append script "<script type=\"text/javascript\" src=\"${ah_base_url}scriptaculous/scriptaculous.js?load=effects,dragdrop\"></script> \n"
-            }
-            "autosuggest" {
-                append script "<script type=\"text/javascript\" src=\"${ah_base_url}autosuggest/autosuggest.js\"></script>\n"
-                append script "<link rel=\"stylesheet\" type=\"text/css\" href=\"${ah_base_url}autosuggest/autosuggest.css\" /> \n"
-            }
-        }
-	}
-	return $script
-}
-
-ad_proc -private ah::is_valid_source {
-    -js_source
-} {
-    This proc will determine if the js_source file is the name is a valid name associated to
-        a javascript source. This proc contains hard coded list of javascript sources that
-        ajaxhelper supports.
-
-        @author Hamilton Chua (ham@solutiongrove.com)
-        @creation-date 2006-12-19
-        @param js_source The name of the javascript source to check
-} {
-
-    set valid_sources [list "prototype" \
-                                "scriptaculous" \
-                                "scriptaculous-effects" \
-                                "scriptaculous-dragdrop" \
-                                "autosuggest" \
-                                "rounder" \
-                                "overlibmws" \
-                                "overlibmws_bubble" \
-                                "overlibmws_scroll" \
-                                "overlibmws_drag" ]
-    set found [lsearch -exact $valid_sources $js_source]
-    if { $found == -1 } {
-        return 0
-    } else {
-        return 1
-    }
-}
-
-ad_proc -private ah::is_js_sources_loaded {
-	-js_source
-} {
-	This proc will loop thru source_list global variable and
-        check for the presence of the specified js_source.
-	If found, this proc will return 1
-	If not found, this proc will return 0
-
-        @author Hamilton Chua (ham@solutiongrove.com)
-        @creation-date 2006-11-05
-        @param js_source The name of the javascript source to check
-} {
-	global ajax_helper_js_sources
-	set state 0
-	if { [info exists ajax_helper_js_sources] } {
-		foreach source $ajax_helper_js_sources {
-			if { [string match $source $js_source] } {
-				set state 1
-				break
-			}
-		}
-	}
-	return $state
-}
 
 ad_proc -private ah::requires {
     -sources
@@ -141,42 +76,47 @@ ad_proc -private ah::requires {
 } {
     #split up the comma delimited sources into a list
     set source_list [split $sources ","]
-    #declare the global variable
-    global ajax_helper_js_sources
+
+    set ah_base_url [ah::get_url]
+    set script ""
+    set minsuffix ""
+    if { [parameter::get_from_package_key -package_key "ajaxhelper" -parameter "UseMinifiedJs"] == 1 } {
+        set minsuffix "-min"
+    }
+
     foreach source $source_list {
-        # do some checks before we add the source to the global
-        # - is it already loaded
-        # - is it a valid source name
-        # - is the source scriptaculous, scriptaculous-effects or scriptaculous-dragdrop
-        if { ![ah::is_js_sources_loaded -js_source $source] && [ah::is_valid_source -js_source $source] } {
-            if { $source == "scriptaculous" || $source == "scriptaculous-effects" || $source == "scriptaculous-dragdrop" } {
-                # source is scriptaculous
-                #  load only if scriptaculous-effects and scriptaculous-dragdrop are not loaded yet
-                if { $source == "scriptaculous" } {
-                    if { ![ah::is_js_sources_loaded -js_source "scriptaculous-effects"] || ![ah::is_js_sources_loaded -js_source "scriptaculous-dragdrop"]} {
-                        lappend ajax_helper_js_sources $source
-                    }
-                }
-                # source is scriptaculous-effects
-                #  load only if scriptaculous and scriptaculous-dragdrop are not loaded yet
-                if { $source == "scriptaculous-effects" } {
-                    if { ![ah::is_js_sources_loaded -js_source "scriptaculous"] || ![ah::is_js_sources_loaded -js_source "scriptaculous-dragdrop"]} {
-                        lappend ajax_helper_js_sources $source
-                    }
-                }
-                # source is scriptaculous-dragdrop
-                #  load only if scriptaculous and scriptaculous-effects are not loaded yet
-                if { $source == "scriptaculous-dragdrop" } {
-                    if { ![ah::is_js_sources_loaded -js_source "scriptaculous"] || ![ah::is_js_sources_loaded -js_source "scriptaculous-effects"]} {
-                        lappend ajax_helper_js_sources $source
-                    }
-                }
-            } else {
-                lappend ajax_helper_js_sources $source
+        switch $source {
+            "rounder" {
+                template::head::add_javascript -src "${ah_base_url}curvycorners/rounded_corners_lite.inc.js"
             }
-        } else {
-            # TODO : we must return an error/exception, for now just add a notice in the log
-            ns_log Notice "AJAXHELPER : $source is already loaded or not valid"
+            "overlibmws" {
+                template::head::add_javascript -src "${ah_base_url}overlibmws/overlibmws${minsuffix}.js"
+            }
+            "overlibmws_bubble" {
+                template::head::add_javascript -order 1 -src "${ah_base_url}overlibmws/overlibmws${minsuffix}.js"
+                template::head::add_javascript -order 2 -script "var OLbubbleImageDir=\"${ah_base_url}overlibmws\";"
+                template::head::add_javascript -order 3 -src "${ah_base_url}overlibmws/overlibmws_bubble${minsuffix}.js"
+            }
+            "overlibmws_scroll" {
+                template::head::add_javascript -order 1 -src "${ah_base_url}overlibmws/overlibmws${minsuffix}.js"
+                template::head::add_javascript -order 2 -src "${ah_base_url}overlibmws/overlibmws_scroll${minsuffix}.js"
+            }
+            "overlibmws_drag" {
+                template::head::add_javascript -order 1 -src "${ah_base_url}overlibmws/overlibmws${minsuffix}.js"
+                template::head::add_javascript -order 2 -src "${ah_base_url}overlibmws/overlibmws_draggable${minsuffix}.js"
+            }
+            "prototype" {
+                template::head::add_javascript -src "${ah_base_url}prototype/prototype${minsuffix}.js"
+            }
+            "scriptaculous" {
+                template::head::add_javascript -order 1 -src "${ah_base_url}prototype/prototype${minsuffix}.js"
+                template::head::add_javascript -order 2 -src "${ah_base_url}scriptaculous/scriptaculous.js"
+            }
+            "autosuggest" {
+                template::head::add_javascript -order 1 -src "${ah_base_url}prototype/prototype${minsuffix}.js"
+                template::head::add_javascript -order 2 -src "${ah_base_url}autosuggest/autosuggest.js"
+                template::head::add_css -href "${ah_base_url}autosuggest/autosuggest.css"
+            }
         }
     }
 }
@@ -184,6 +124,8 @@ ad_proc -private ah::requires {
 ad_proc -public ah::js_sources {
 	{-source "default"}
 } {
+    DEPRECATED. Use ah::requires instead.
+
 	Will load any of the following javascript sources
 		prototype,
 		scriptaculous,
@@ -208,8 +150,6 @@ ad_proc -public ah::js_sources {
 		"overlibmws_drag" : to load the overlibmws javascript files for draggable dhtml callouts and popups.
         "prototype" : to load ONLY the prototype javascript source.
         "scriptaculous" : to load all scriptaculous javascript sources.
-        "scriptaculous-effects" : to load only the scriptaculous javascript sources needed for effects.
-        "scriptaculous-dragdrop" : to load only the scriptaculous javascript sources needed for drag and drop.
 
 	@return
 	@error
@@ -227,17 +167,15 @@ ad_proc -public ah::js_sources {
     if { $source == "default" } {
         if { ![ah::is_js_sources_loaded -js_source "prototype"] } {
                 # load prototype
-                append script "<script type=\"text/javascript\" src=\"${ah_base_url}prototype/prototype${minsuffix}.js\"></script> \n"
+                template::head::add_javascript -src "${ah_base_url}prototype/prototype${minsuffix}.js"
                 # make sure helper procs don't load it again
                 lappend ajax_helper_js_sources "prototype"
         }
-        if { ![ah::is_js_sources_loaded -js_source "scriptaculous"] && ![ah::is_js_sources_loaded -js_source "scriptaculous-effects"] && ![ah::is_js_sources_loaded -js_source "scriptaculous-dragdrop"]} {
+        if { ![ah::is_js_sources_loaded -js_source "scriptaculous"] } {
                 # load scriptaculous
-                append script "<script type=\"text/javascript\" src=\"${ah_base_url}scriptaculous/scriptaculous.js\"></script> \n"
+                template::head::add_javascript -src "${ah_base_url}scriptaculous/scriptaculous${minsuffix}.js"
                 # make sure it doesn't get loaded again
                 lappend ajax_helper_js_sources "scriptaculous"
-                lappend ajax_helper_js_sources "scriptaculous-dragdrop"
-                lappend ajax_helper_js_sources "scriptaculous-effects"
         }
     }
 
@@ -247,55 +185,45 @@ ad_proc -public ah::js_sources {
 		switch $x {
 			"rounder" {
 				if { ![ah::is_js_sources_loaded -js_source "rounder"] } {
-					append script "<script type=\"text/javascript\" src=\"${ah_base_url}curvycorners/rounded_corners_lite.inc.js\"></script> \n"
+					template::head::add_javascript -src "${ah_base_url}curvycorners/rounded_corners_lite.inc.js"
 				}
 			}
 			"overlibmws" {
 				if { ![ah::is_js_sources_loaded -js_source "overlibmws"] } {
-					append script "<script type=\"text/javascript\" src=\"${ah_base_url}overlibmws/overlibmws.js\"></script> \n"
-					append script "<script type=\"text/javascript\" src=\"${ah_base_url}overlibmws/overlibmws_overtwo.js\"></script>\n"
+					template::head::add_javascript -src "${ah_base_url}overlibmws/overlibmws${minsuffix}.js"
+					template::head::add_javascript -src "${ah_base_url}overlibmws/overlibmws_overtwo${minsuffix}.js"
 				}
 			}
 			"overlibmws_bubble" {
 				if { ![ah::is_js_sources_loaded -js_source "overlibmws_bubble"] } {
-					append script "<script type=\"text/JavaScript\">var OLbubbleImageDir=\"${ah_base_url}overlibmws\";</script>\n"
-					append script "<script type=\"text/javascript\" src=\"${ah_base_url}overlibmws/overlibmws_bubble.js\"></script>\n"
+					template::head::add_javascript -script "var OLbubbleImageDir=\"${ah_base_url}overlibmws\";"
+					template::head::add_javascript -src "${ah_base_url}overlibmws/overlibmws_bubble${minsuffix}.js"
 				}
 			}
 			"overlibmws_scroll" {
 				if { ![ah::is_js_sources_loaded -js_source "overlibmws_scroll"] } {
-					append script "<script type=\"text/javascript\" src=\"${ah_base_url}overlibmws/overlibmws_scroll.js\"></script>\n"
+					template::head::add_javascript -src "${ah_base_url}overlibmws/overlibmws_scroll${minsuffix}.js"
 				}
 			}
 			"overlibmws_drag" {
 				if { ![ah::is_js_sources_loaded -js_source "overlibmws_drag"] } {
-					append script "<script type=\"text/javascript\" src=\"${ah_base_url}overlibmws/overlibmws_draggable.js\"></script>\n"
+					template::head::add_javascript -src "${ah_base_url}overlibmws/overlibmws_draggable${minsuffix}.js"
 				}
 			}
             "prototype" {
                 if { ![ah::is_js_sources_loaded -js_source "prototype"] } {
-                    append script "<script type=\"text/javascript\" src=\"${ah_base_url}prototype/prototype${minsuffix}.js\"></script> \n"
-                }
-            }
-            "autosuggest" {
-                if { ![ah::is_js_sources_loaded -js_source "autosuggest"] } {
-                    append script "<script type=\"text/javascript\" src=\"${ah_base_url}autosuggest/autosuggest.js\"></script>\n"
-                    append script "<link rel=\"stylesheet\" type=\"text/css\" href=\"${ah_base_url}autosuggest/autosuggest.css\" /> \n"
+                    template::head::add_javascript -src "${ah_base_url}prototype/prototype${minsuffix}.js"
                 }
             }
             "scriptaculous" {
                 if { ![ah::is_js_sources_loaded -js_source "scriptaculous"] } {
-                    append script "<script type=\"text/javascript\" src=\"${ah_base_url}scriptaculous/scriptaculous.js\"></script> \n"
+                    template::head::add_javascript -src "${ah_base_url}scriptaculous/scriptaculous${minsuffix}.js"
                 }
             }
-            "scriptaculous-effects" {
-                if { ![ah::is_js_sources_loaded -js_source "scriptaculous-effects"] } {
-                    append script "<script type=\"text/javascript\" src=\"${ah_base_url}scriptaculous/scriptaculous.js?load=effects\"></script> \n"
-                }
-            }
-            "scriptaculous-dragdrop" {
-                if { ![ah::is_js_sources_loaded -js_source "scriptaculous-dragdrop"] } {
-                    append script "<script type=\"text/javascript\" src=\"${ah_base_url}scriptaculous/scriptaculous.js?load=effects,dragdrop\"></script> \n"
+            "autosuggest" {
+                if { ![ah::is_js_sources_loaded -js_source "autosuggest"] } {
+                    template::head::add_javascript -src "${ah_base_url}autosuggest/autosuggest.js"
+                    template::head::add_css -href "${ah_base_url}autosuggest/autosuggest.css"
                 }
             }
 		}
@@ -305,6 +233,30 @@ ad_proc -public ah::js_sources {
 }
 
 # ********* UTILS ************
+
+ad_proc -public ah::util_list_to_json {
+    -lists_of_pairs
+} {
+    Converts a properly structured list of lists into JSON format.
+        The list of lists may look something like
+
+            set data [list]
+            lappend data [list [list "x" "1"] [list "y" "10"] ]
+            lappend data [list [list "x" "5"] [list "y" "20"] ]
+
+        each line represents a row composed of lists.
+        Each list in the row holds a pair that will be joined by ":".
+} {
+    set rows [list]
+    foreach row $lists_of_pairs {
+        set pairs [list]
+        foreach pair $row {
+            lappend pairs [join $pair ":"]
+        }
+        lappend rows [join $pairs ","]
+    }
+    return "\{[join $rows "\},\{"]\}"
+}
 
 ad_proc -private ah::get_package_id  {
 
@@ -367,7 +319,7 @@ ad_proc -private ah::enclose_in_script {
 
 ad_proc -public ah::create_js_function {
 	-body:required
-    {-name ""}
+	{-name ""}
 	{-parameters {} }
 } {
 	Helper procedure to generate a javascript function
@@ -380,9 +332,7 @@ ad_proc -public ah::create_js_function {
 } {
 	set script "function ${name} ("
 	if { [exists_and_not_null parameters] } { append script [join $parameters ","] }
-	append script ") \{ "
-	append script $body
-	append script " \} "
+	append script ") \{ $body \}"
 	return $script
 }
 
@@ -399,10 +349,8 @@ ad_proc -public ah::insert {
 	@param text What you want to insert.
 	@param position Where you want to insert text. This is case sensitive. Possible values include After, Bottom, Before and Top. Defaults to After.
 } {
-	if { ![ah::is_js_sources_loaded -js_source "prototype"] } {
-		global ajax_helper_js_sources
-		lappend ajax_helper_js_sources "prototype"
-	}
+
+	ah::requires -sources "prototype"
 
 	set script "new Insertion.${position}('${element}','${text}'); "
 	return $script
@@ -428,7 +376,7 @@ ad_proc -public ah::starteventwatch {
 	@param obs_function the funcion that will be executed when the event is detected
 
 } {
-    ah::requires -sources "prototype"
+	ah::requires -sources "prototype"
 
 	if { !$element_is_var_p } {
 		set element [ah::isnot_js_var $element]
@@ -524,6 +472,7 @@ ad_proc -public ah::ajaxrequest {
     @param asynchronous the default is true
 
 } {
+
     ah::requires -sources "prototype"
 
 	set preoptions "asynchronous:${asynchronous},method:'post'"
@@ -578,7 +527,7 @@ ad_proc -public ah::ajaxupdate {
 	@error
 } {
 
-    ah::requires -sources "prototype,scriptaculous-effects"
+    ah::requires -sources "scriptaculous"
 
 	if { !$container_is_var_p } {
 		set container [ah::isnot_js_var $container]
@@ -684,7 +633,7 @@ ad_proc -public ah::bubblecallout {
 
 } {
 
-    ah::requires -sources "overlibmws,overlibmws_bubble"
+    ah::requires -sources "overlibmws_bubble"
 
 	set script "onmouseover=\""
 	append script [ah::popup -content "'$text'" -options "BUBBLE,BUBBLETYPE,'$type',TEXTSIZE,'$textsize'"]
@@ -717,7 +666,7 @@ ad_proc -public ah::ajax_bubblecallout {
 	@error
 } {
 
-    ah::requires -sources "overlibmws,overlibmws_bubble"
+    ah::requires -sources "overlibmws_bubble"
 
 	set popup [ah::popup -content "t.responseText" -options "BUBBLE,BUBBLETYPE,'$type',TEXTSIZE,'$textsize'"]
 	set request [ah::ajaxrequest -url $url -pars '$pars' -options "onSuccess: function(t) { $popup }" ]
@@ -752,7 +701,7 @@ ad_proc -public ah::effects {
 	@error
 
 } {
-    ah::requires -sources "prototype,scriptaculous-effects"
+    ah::requires -sources "scriptaculous"
 
 	if { !$element_is_var_p } {
 		set element [ah::isnot_js_var $element]
@@ -784,7 +733,7 @@ ad_proc -public ah::toggle {
 	@error
 
 } {
-    ah::requires -sources "prototype,scriptaculous-effects"
+    ah::requires -sources "scriptaculous"
 
 	if { !$element_is_var_p } {
 		set element [ah::isnot_js_var $element]
@@ -819,7 +768,7 @@ ad_proc -public ah::draggable {
 	@error
 
 } {
-    ah::requires -sources "prototype,scriptaculous-dragdrop"
+    ah::requires -sources "scriptaculous"
 
 	if { !$element_is_var_p } {
 		set element [ah::isnot_js_var $element]
@@ -853,7 +802,7 @@ ad_proc -public ah::droppable {
 	@error
 
 } {
-    ah::requires -sources "prototype,scriptaculous-dragdrop"
+    ah::requires -sources "scriptaculous"
 
 	if { !$element_is_var_p } {
 		set element [ah::isnot_js_var $element]
@@ -884,7 +833,7 @@ ad_proc -public ah::droppableremove {
 
 } {
 
-    ah::requires -sources "prototype,scriptaculous-dragdrop"
+    ah::requires -sources "scriptaculous"
 
 	if { !$element_is_var_p } {
 		set element [ah::isnot_js_var $element]
@@ -916,7 +865,7 @@ ad_proc -public ah::sortable {
 
 } {
 
-    ah::requires -sources "prototype,scriptaculous-dragdrop"
+    ah::requires -sources "scriptaculous"
 
 	if { !$element_is_var_p } {
 		set element [ah::isnot_js_var $element]
@@ -988,7 +937,7 @@ ad_proc -public ah::generate_autosuggest_array {
 } {
 
 
-    ah::requires -sources "prototype,autosuggest"
+    ah::requires -sources "autosuggest"
 
     if {[llength $array_list]} {
 	set suggestion_list $array_list

@@ -1,4 +1,3 @@
-
 # demonstrates how to create YUI Menu using a properly formatted tcl list
 
 # Menu 1
@@ -14,8 +13,9 @@ set menulist1 { { { "text" "Google"} { "url" "http://www.google.com"} } \
 ah::yui::menu_from_list -varname "oMenu1" \
     -id "basicmenu1" \
     -menulist $menulist1 \
-    -arrayname "yuimenu1" \
-    -options "context:new Array(\"menu1\",\"tl\",\"bl\")"
+    -triggerel "menu1" \
+    -triggerevent "click" \
+    -options "context:new Array(\"menu1\",\"tl\",\"bl\"),clicktohide:true"
 
 # Menu 2
 
@@ -27,25 +27,19 @@ ah::yui::menu_from_list -varname "oMenu1" \
 # lappend menulist2 [list [list "text" "OpenACS"] [list "url" "http://www.openacs.org"] ]
 # lappend menulist2 [list [list "text" "Solution Grove"] [list "submenu" $submenulist1] ]
 
-set menulist2 { { { "text" "OpenACS" } { "url" "http://www.openacs.org" } } \
-                 { { "text" "Solution Grove" } { "submenu" \
-                                                     { { "id" "sgrovelinks" } { "itemdata"  {\
-                                                                                 { { "text" "Home Page"} { "url" "http://www.solutiongrove.com"} } \
-                                                                                 { { "text" "Blog"} { "url" "http://www.solutiongrove.com/blogger/"} } \
-                                                                               } } }
-                                                } } \
+set menulist2 { { { "text" "OpenACS" } { "url" "http://www.openacs.org" } } 
+                 { { "text" "Solution Grove" } { "submenu" 
+                        { { "id" "sgrovelinks" } { "itemdata"  {
+                                                    { { "text" "Home Page"} { "url" "http://www.solutiongrove.com"} } 
+                                                    { { "text" "Blog"} { "url" "http://www.solutiongrove.com/blogger/"} } 
+                                                } } }
+                } } \
                 }
+
 
 ah::yui::menu_from_list -varname "oMenu2" \
     -id "basicmenu2" \
     -menulist $menulist2 \
-    -arrayname "yuimenu2" \
-    -options "context:new Array(\"menu2\",\"tl\",\"bl\")"
-
-# get the render and show values of the resulting arrays
-set js_script $yuimenu1(render)
-append js_script $yuimenu2(render)
-set js_script [ah::enclose_in_script -script ${js_script} ]
-
-set action_script1 $yuimenu1(show)
-set action_script2 $yuimenu2(show)
+    -triggerel "menu2" \
+    -triggerevent "click" \
+    -options "context:new Array(\"menu2\",\"tl\",\"bl\"),hidedelay:1,clicktohide:true"

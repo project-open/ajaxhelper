@@ -1,6 +1,6 @@
 <master>
 <property name="title"> TEST : Rounded Corners </property>
-<property name="header_stuff">
+<property name="head">
 	<style>
 	.myBox{
 		margin: 10px;

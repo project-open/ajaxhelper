@@ -10,79 +10,39 @@ ad_library {
 namespace eval ah::yui { }
 
 ad_proc -private ah::yui::load_js_sources {
-	-source_list
+    -source_list
 } {
-	Accepts a tcl list of sources to load.
-	This source_list will be the global ajax_helper_yui_js_sources variable.
-	This script is called in the blank-master template.
+    Accepts a tcl list of sources to load.
+    This source_list will be the global ajax_helper_yui_js_sources variable.
+    This script is called in the blank-master template.
+    As of 0.86d with YUI 2.3.0, this proc now uses the Yahoo Loader Utility to
+     load the required sources.
 
-	@author Hamilton Chua (ham@solutiongrove.com)
-	@creation-date 2006-11-05
+    @author Hamilton Chua (ham@solutiongrove.com)
+    @creation-date 2006-11-05
+    @modified-date 2007-08-12
 } {
-	set ah_base_url [ah::get_url]
-	set script ""
-	set minsuffix ""
 
-	if { [parameter::get_from_package_key -package_key "ajaxhelper" -parameter "UseMinifiedJs"] == 1 } {
-		set minsuffix "-min"
-	}
+    set ah_base_url "[ah::get_url]yui/"
+    set script ""
+    set minsuffix ""
+    set base "base: '${ah_base_url}',"
 
-	foreach source $source_list {
-		switch $source {
-			"animation" {
-				append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/animation/animation${minsuffix}.js\"></script> \n"
-			}
-			"event" {
-				append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/event/event${minsuffix}.js\"></script> \n"
-			}
-			"treeview" {
-				append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/treeview/treeview${minsuffix}.js\"></script> \n"
-				global yahoo_treeview_css
-				if { [exists_and_not_null yahoo_treeview_css] } {
-					append script "<link rel=\"stylesheet\" type=\"text/css\" href=\"${yahoo_treeview_css}\" /> \n"
-				} else {
-					append script "<link rel=\"stylesheet\" type=\"text/css\" href=\"${ah_base_url}yui/treeview/assets/tree.css\" /> \n"
-				}
-			}
-            "menu" {
-                append script "<link rel=\"stylesheet\" type=\"text/css\" href=\"${ah_base_url}yui/fonts/fonts${minsuffix}.css\" /> \n"
-                global yahoo_menu_css
-                if { [exists_and_not_null yahoo_menu_css] } {
-                    append script "<link rel=\"stylesheet\" type=\"text/css\" href=\"${yahoo_menu_css}\" /> \n"
-                } else {
-                    append script "<link rel=\"stylesheet\" type=\"text/css\" href=\"${ah_base_url}yui/menu/assets/menu.css\" /> \n"
-                }
-                append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/container/container_core${minsuffix}.js\"></script> \n"
-                append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/menu/menu${minsuffix}.js\"></script> \n"
-            }
-			"calendar" {
-				append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/calendar/calendar${minsuffix}.js\"></script> \n"
-			}
-			"dragdrop" {
-				append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/dragdrop/dragdrop${minsuffix}.js\"></script> \n"
-			}
-			"slider" {
-				append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/slider/slider${minsuffix}.js\"></script> \n"
-			}
-			"container" {
-				append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/container/container${minsuffix}.js\"></script> \n"
-				append script "<link rel=\"stylesheet\" type=\"text/css\" href=\"${ah_base_url}yui/container/assets/container.css\" /> \n"
-			}
-			"dom" {
-				append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/dom/dom${minsuffix}.js\"></script> \n"
-			}
-			"connection" {
-				append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/connection/connection${minsuffix}.js\"></script> \n"
-			}
-			"yahoo" {
-				append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/yahoo/yahoo${minsuffix}.js\"></script> \n"
-			}
-            "utilities" {
-                append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/utilities/utilities.js\"></script> \n"
-            }
-		}
-	}
-	return $script
+    if { [parameter::get_from_package_key -package_key "ajaxhelper" -parameter "UseMinifiedJs"] == 1 } {
+        set minsuffix "-min"
+    }
+
+    if { [parameter::get_from_package_key -package_key "ajaxhelper" -parameter "LoadJsfromYahoo"] == 1 } {
+        set minsuffix "-min"
+        set ah_base_url "http://yui.yahooapis.com/2.3.0/build/"
+        set base ""
+    }
+
+    set requires_list [join $source_list "','"]
+
+    append script "<script src='${ah_base_url}yuiloader/yuiloader-debug.js'></script>"
+    append script "<script language=\"javascript\" type=\"text/javascript\">loader = new YAHOO.util.YUILoader({ require: \['${requires_list}'\], ${base} onSuccess: function(loader) { ah_page_init() } });\nloader.insert();</script>"
+    return ${script}
 }
 
 ad_proc -private ah::yui::is_valid_source {
@@ -108,7 +68,8 @@ ad_proc -private ah::yui::is_valid_source {
                                 "menu" \
                                 "dragdrop" \
                                 "slider" \
-                                "container" ]
+                                "container" \
+                                "autocomplete" ]
     set found [lsearch -exact $valid_sources $js_source]
     if { $found == -1 } {
         return 0
@@ -159,7 +120,7 @@ ad_proc -private ah::yui::requires {
         # do some checks before we add the source to the global
         # - is it already loaded
         # - is it a valid source name
-        # - is the source utilities or yahoo,dom,event
+        # - is the source "utilities" or "yahoo","dom","event"
         if { ![ah::yui::is_js_sources_loaded -js_source $source] && [ah::yui::is_valid_source -js_source $source] } {
             # source is utilities
             if { $source == "utilities"} {
@@ -173,7 +134,7 @@ ad_proc -private ah::yui::requires {
             }
         } else {
             # TODO : we must return an error/exception, for now just add a notice in the log
-            ns_log Notice "AJAXHELPER YUI: $source is already loaded or not valid"
+            # ns_log debug "AJAXHELPER YUI: $source is already loaded or not valid"
         }
     }
 }
@@ -183,6 +144,8 @@ ad_proc -public ah::yui::js_sources {
 	{-source "default"}
 	{-min:boolean}
 } {
+
+    DEPRECATED. Use ah::yui::requires instead.
 
 	Generates the <script> syntax needed on the head
 	for Yahoo's User Interface Library
@@ -211,19 +174,25 @@ ad_proc -public ah::yui::js_sources {
 	@error
 
 } {
-	set ah_base_url [ah::get_url]
+	set ah_base_url "[ah::get_url]yui/"
     set script ""
 
     set minsuffix ""
+
     if { $min_p || [parameter::get_from_package_key -package_key "ajaxhelper" -parameter "UseMinifiedJs"] == 1 } {
         set minsuffix "-min"
+    }
+
+    if { [parameter::get_from_package_key -package_key "ajaxhelper" -parameter "LoadJsfromYahoo"] == 1 } {
+        set minsuffix "-min"
+        set ah_base_url "http://yui.yahooapis.com/2.3.0/build/"
     }
 
     # js_sources was called with no parameters, just load the defaults
     if { $source == "default" } {
         # yahoo has a compressed js file with  yahoo, dom and event all in one file (utilities)
         if { ![ah::is_js_sources_loaded -js_source "utilities"] } {
-                append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/utilities/utilities.js\"></script> \n"
+                append script "<script type=\"text/javascript\" src=\"${ah_base_url}utilities/utilities.js\"></script> \n"
                 # make sure it doesn't load again
                 lappend ajax_helper_yui_js_sources "utilities"
         }
@@ -235,69 +204,106 @@ ad_proc -public ah::yui::js_sources {
 		switch $x {
 			"animation" {
 				if { ![ah::yui::is_js_sources_loaded -js_source "animation"] } {
-					append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/animation/animation${minsuffix}.js\"></script> \n"
+					append script "<script type=\"text/javascript\" src=\"${ah_base_url}animation/animation${minsuffix}.js\"></script> \n"
 				}
 			}
 			"event" {
 				if { ![ah::yui::is_js_sources_loaded -js_source "event"] } {
-					append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/event/event${minsuffix}.js\"></script> \n"
+					append script "<script type=\"text/javascript\" src=\"${ah_base_url}event/event${minsuffix}.js\"></script> \n"
 				}
 			}
 			"treeview" {
 				if { ![ah::yui::is_js_sources_loaded -js_source "treeview"] } {
-					append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/treeview/treeview${minsuffix}.js\"></script> \n"
+					append script "<script type=\"text/javascript\" src=\"${ah_base_url}treeview/treeview${minsuffix}.js\"></script> \n"
 				}
 			}
 			"calendar" {
 				if { ![ah::yui::is_js_sources_loaded -js_source "calendar"] } {
-					append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/calendar/calendar${minsuffix}.js\"></script> \n"
+					append script "<script type=\"text/javascript\" src=\"${ah_base_url}calendar/calendar${minsuffix}.js\"></script> \n"
 				}
 			}
 			"dragdrop" {
 				if { ![ah::yui::is_js_sources_loaded -js_source "dragdrop"] } {
-					append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/dragdrop/dragdrop${minsuffix}.js\"></script> \n"
+					append script "<script type=\"text/javascript\" src=\"${ah_base_url}dragdrop/dragdrop${minsuffix}.js\"></script> \n"
 				}
 			}
 			"slider" {
 				if { ![ah::yui::is_js_sources_loaded -js_source "slider"] } {
-					append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/slider/slider${minsuffix}.js\"></script> \n"
+					append script "<script type=\"text/javascript\" src=\"${ah_base_url}slider/slider${minsuffix}.js\"></script> \n"
 				}
 			}
 			"container" {
 				if { ![ah::yui::is_js_sources_loaded -js_source "container"] } {
-					append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/container/container${minsuffix}.js\"></script> \n"
-					append script "<link rel=\"stylesheet\" type=\"text/css\" href=\"${ah_base_url}yui/container/assets/container.css\" /> \n"
+					append script "<script type=\"text/javascript\" src=\"${ah_base_url}container/container${minsuffix}.js\"></script> \n"
+					append script "<link rel=\"stylesheet\" type=\"text/css\" href=\"${ah_base_url}container/assets/container.css\" /> \n"
 				}
 			}
 			"menu" {
 				if { ![ah::yui::is_js_sources_loaded -js_source "menu"] } {
-					append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/menu/menu${minsuffix}.js\"></script> \n"
-					append script "<link rel=\"stylesheet\" type=\"text/css\" href=\"${ah_base_url}yui/menu/assets/menu.css\" /> \n"
+					append script "<script type=\"text/javascript\" src=\"${ah_base_url}menu/menu${minsuffix}.js\"></script> \n"
+					append script "<link rel=\"stylesheet\" type=\"text/css\" href=\"${ah_base_url}menu/assets/menu.css\" /> \n"
 				}
 			}
 			"connection" {
 				if { ![ah::yui::is_js_sources_loaded -js_source "connection"] } {
-					append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/connection/connection${minsuffix}.js\"></script> \n"
+					append script "<script type=\"text/javascript\" src=\"${ah_base_url}connection/connection${minsuffix}.js\"></script> \n"
 				}
 			}
 			"dom" {
 				if { ![ah::yui::is_js_sources_loaded -js_source "yahoo"] } {
-					append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/dom/dom${minsuffix}.js\"></script> \n"
+					append script "<script type=\"text/javascript\" src=\"${ah_base_url}dom/dom${minsuffix}.js\"></script> \n"
 				}
             }
             "yahoo" {
 				if { ![ah::yui::is_js_sources_loaded -js_source "yahoo"] } {
-					append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/yahoo/yahoo${minsuffix}.js\"></script> \n"
+					append script "<script type=\"text/javascript\" src=\"${ah_base_url}yahoo/yahoo${minsuffix}.js\"></script> \n"
 				}
 			}
             "utilities" {
                 if { ![ah::yui::is_js_sources_loaded -js_source "utilities"] } {
-                    append script "<script type=\"text/javascript\" src=\"${ah_base_url}yui/utilities/utilities.js\"></script> \n"
+                    append script "<script type=\"text/javascript\" src=\"${ah_base_url}utilities/utilities.js\"></script> \n"
                 }
             }
 		}
 	}
 	return $script
+}
+
+ad_proc -public ah::yui::cssclass {
+    {-varname "yuiclass"}
+    {-action "add"}
+    -element:required
+    -classname:required
+    {-element_is_var:boolean}
+} {
+
+    Generates javascript code to control css class on html elements.
+    
+    http://developer.yahoo.com/yui/dom/
+
+    @author Hamilton Chua (ham@solutiongrove.com)
+    @creation-date 2007-08-11
+
+    @param varname The javascript variable name to use.
+    @param action Valid actions are "add", "remove", and "check"
+    @param element The html element that will be affected
+    @param classname The css class to add, remove, or check
+
+} {
+
+    if { !$element_is_var_p } {
+        set element [ah::isnot_js_var $element]
+    }
+
+    ah::yui::requires -sources "dom"
+    set script "YAHOO.util.Dom."
+    switch $action {
+        "add" { append script "addClass(${element},\"${classname}\"); " }
+        "remove" { append script "removeClass(${element},\"${classname}\") ;" }
+        "check" { append script "hasClass(${element},\"${classname}\"); " }
+        
+    }
+    return ${script}
 }
 
 ad_proc -public ah::yui::addlistener {
@@ -317,11 +323,12 @@ ad_proc -public ah::yui::addlistener {
 	@param callback The name of the javascript function to execute when the event for the given element has been triggered.
 } {
 
-    ah::yui::requires -sources "yahoo,event"
+    ah::yui::requires -sources "event"
 
 	if { !$element_is_var_p } {
 		set element [ah::isnot_js_var $element]
 	}
+
 	return "YAHOO.util.Event.addListener($element,\"$event\",${callback});\n"
 }
 
@@ -343,11 +350,11 @@ ad_proc -public ah::yui::tooltip {
 	@param message The message that will appear in the tooltip
 } {
 
-    ah::yui::requires -sources "utilities,container"
+    ah::yui::requires -sources "container"
 
 	set script "var $varname = new YAHOO.widget.Tooltip(\"alertTip\", { context:\"$element\", text:\"$message\", $options });"
-	if { $enclose_p } { set script [ah::enclose_in_script -script ${script} ] }
-	return $script
+    global ajax_helper_init_scripts
+    append ajax_helper_init_scripts $script
 }
 
 ad_proc -public ah::yui::create_tree {
@@ -355,7 +362,7 @@ ad_proc -public ah::yui::create_tree {
 	-nodes:required
 	{-varname "tree"}
 	{-css ""}
-    {-enclose:boolean}
+    {-nodedroppable:boolean}
 } {
 	Generates the javascript to create a yahoo tree view control.
     Nodes accepts a list of lists.
@@ -387,24 +394,42 @@ ad_proc -public ah::yui::create_tree {
 
 } {
 
-    ah::yui::requires -sources "utilities,treeview"
-    global yahoo_treeview_css
-    set yahoo_treeview_css $css
+    ah::yui::requires -sources "dom,treeview"
 
-	set script "${varname} = new YAHOO.widget.TreeView(\"${element}\"); "
+    if { [exists_and_not_null css] } { template::head::add_css -href $css }
+
+	set script "var ${varname} = new YAHOO.widget.TreeView(\"${element}\"); "
 	append script "var ${varname}root = ${varname}.getRoot(); "
 	foreach node $nodes {
-		append script [ah::yui::create_tree_node -varname [lindex $node 0] \
-				-label [lindex $node 1] \
-				-treevarname [lindex $node 2] \
-				-href [lindex $node 3] \
-				-attach_to_node [lindex $node 4] \
-				-dynamic_load [lindex $node 5] \
-				-open [lindex $node 6] ]
+        if { $nodedroppable_p } {
+          append script [ah::yui::create_tree_node -varname [lindex $node 0] \
+                    -label [lindex $node 1] \
+                    -treevarname [lindex $node 2] \
+                    -href [lindex $node 3] \
+                    -attach_to_node [lindex $node 4] \
+                    -dynamic_load [lindex $node 5] \
+                    -open [lindex $node 6] \
+                    -droppable ]
+        } else {
+		  append script [ah::yui::create_tree_node -varname [lindex $node 0] \
+				    -label [lindex $node 1] \
+				    -treevarname [lindex $node 2] \
+				    -href [lindex $node 3] \
+				    -attach_to_node [lindex $node 4] \
+				    -dynamic_load [lindex $node 5] \
+				    -open [lindex $node 6] ]
+        }
 	}
 	append script "${varname}.draw(); "
-    if { $enclose_p } { set script [ah::enclose_in_script -script ${script} ] }
-	return $script
+
+    global ajax_helper_init_scripts
+    append ajax_helper_init_scripts [ah::yui::addlistener \
+        -element "window" \
+        -event "load" \
+        -callback [ah::create_js_function -body ${script}] \
+        -element_is_var ]
+
+
 }
 
 ad_proc -private ah::yui::create_tree_node {
@@ -415,6 +440,7 @@ ad_proc -private ah::yui::create_tree_node {
 	{-attach_to_node ""}
 	{-dynamic_load ""}
 	{-open "false"}
+    {-droppable:boolean}
 } {
 	Generates the javascript to add a node to a yahoo tree view control
 	http://developer.yahoo.com/yui/treeview/
@@ -435,12 +461,17 @@ ad_proc -private ah::yui::create_tree_node {
 	if { [exists_and_not_null attach_to_node] } {
 		append script "var node = ${treevarname}.getNodeByProperty('id','${attach_to_node}'); "
 		append script "if ( node == null ) { var node = nd${attach_to_node}; } "
-
 	} else {
 		append script "var node = ${treevarname}root; "
 	}
+
 	if { ![exists_and_not_null open] } { set open "false" }
+
 	append script "var nd${varname} = new YAHOO.widget.TextNode(od${varname},node,${open}); "
+
+    if { $droppable_p } {
+        append script "var dd${varname} = new YAHOO.util.DDTarget(nd${varname}.labelElId); "
+    }
 
 	if { [exists_and_not_null dynamic_load] } {
 		append script "nd${varname}.setDynamicLoad(${dynamic_load}); "
@@ -452,16 +483,13 @@ ad_proc -private ah::yui::create_tree_node {
 ad_proc -public ah::yui::menu_from_markup {
     -varname:required
     -markupid:required
-    {-enclose:boolean}
-    {-arrayname "yuimenu"}
+    -triggerel:required
+    -triggerevent:required
     {-css ""}
     {-options ""}
 } {
     Generates the javascript to create a YUI menu from existing html markup.
-    The resulting script is placed in an array named $arrayname which defaults to "yuimenu".
-    The array will have 2 items $yuimenu(show) and $yuimenu(render).
-        render holds the script that creates the Yui Menu widget while
-        show holds the script to display the menu, the show script can be placed in an onclick event of an html element.
+
 
     http://developer.yahoo.com/yui/menu/
 
@@ -470,16 +498,15 @@ ad_proc -public ah::yui::menu_from_markup {
 
     @param varname The javascript variable to represent the menu object.
     @param markupid The html id of with the markup we want to transform into a menu.
-    @param enclose Specify this if you want to enclose the entire script in script tags.
-    @param arrayname Type the name of an array to use. "yuimenu" will be used if none is specified.
+    @param triggerel The element from which the menu will be launched
+    @param triggerevent The event on triggerel that will make the menu appear. (e.g. click, mouseover)
     @param css Specify the full path to a css style sheet file to use an alternative to the menu.css that is used.
     @param options Additional options that you want to pass to the javascript object constructor.
 
 } {
-    ah::yui::requires -sources "utilities,menu"
+    ah::yui::requires -sources "menu,container,overlay"
 
-    global yahoo_menu_css
-    set yahoo_menu_css $css
+    if { [exists_and_not_null css] } { template::head::add_css -href $css }
 
     set script "${varname} = new YAHOO.widget.Menu(\"${markupid}\",{${options}}); "
     append script "${varname}.render(); "
@@ -490,13 +517,14 @@ ad_proc -public ah::yui::menu_from_markup {
         -callback [ah::create_js_function -body ${script}] \
         -element_is_var ]
 
-    if { $enclose_p } { set script [ah::enclose_in_script -script ${script} ] }
+    append script [ah::yui::addlistener \
+        -element "${triggerel}" \
+        -event "${triggerevent}" \
+        -callback [ah::create_js_function -body "${varname}.show();"] ]
 
-    set showscript "${varname}.show(); "
+    global ajax_helper_init_scripts
+    append ajax_helper_init_scripts $script
 
-    upvar $arrayname arr
-    set arr(render) $script
-    set arr(show) $showscript
 }
 
 ad_proc -public ah::yui::menu_list_to_json {
@@ -512,6 +540,7 @@ ad_proc -public ah::yui::menu_list_to_json {
         each line represents a row composed of lists.
         Each list in the row holds a pair that will be joined by ":".
 } {
+
     set rows [list]
     foreach row $lists_of_pairs {
         set pairs [list]
@@ -542,17 +571,13 @@ ad_proc -public ah::yui::menu_from_list {
     -varname:required
     -id:required
     -menulist:required
-    {-enclose:boolean}
-    {-arrayname "yuimenu"}
+    -triggerel:required
+    -triggerevent:required
     {-css ""}
     {-options ""}
     {-renderin "document.body"}
 } {
     Generates the javascript to create a YUI menu from a tcl list.
-    The resulting script is placed in an array named $arrayname which defaults to "yuimenu".
-    The array will have 2 items $yuimenu(show) and $yuimenu(render).
-        render holds the script that creates the Yui Menu widget while
-        show holds the script to display the menu, the show script can be placed in an onclick event of an html element.
 
     http://developer.yahoo.com/yui/menu/
 
@@ -562,17 +587,17 @@ ad_proc -public ah::yui::menu_from_list {
     @param varname The javascript variable to represent the menu object.
     @param menulist A list of lists with the parameters this script needs to generate your menu.
     @param id The html id the menu element.
-    @param enclose Specify this if you want to enclose the entire script in script tags.
-    @param arrayname Type the name of an array to use. "yuimenu" will be used if none is specified.
+    @param triggerel The element from which the menu will be launched
+    @param triggerevent The event on triggerel that will make the menu appear. (e.g. click, mouseover)
     @param css Specify the full path to a css style sheet file to use an alternative to the menu.css that is used.
     @param options Additional options that you want to pass to the javascript object constructor.
+    @param renderin Specify a div element where you want to render the menu in, default is document.body.
 
 } {
 
-    ah::yui::requires -sources "utilities,menu"
+    ah::yui::requires -sources "event,menu,container,overlay"
 
-    global yahoo_menu_css
-    set yahoo_menu_css $css
+    if { [exists_and_not_null css] } { template::head::add_css -href $css }
 
     set jsonlist [ah::yui::menu_list_to_json -lists_of_pairs $menulist]
 
@@ -580,19 +605,14 @@ ad_proc -public ah::yui::menu_from_list {
     append script "$varname.addItems(\[${jsonlist}\]); "
     append script "${varname}.render(${renderin}); "
 
-    set script [ah::yui::addlistener \
-        -element "window" \
-        -event "load" \
-        -callback [ah::create_js_function -body ${script}] \
-        -element_is_var ]
+    # show when triggerevent occurs on triggerel
+    append script [ah::yui::addlistener \
+        -element "${triggerel}" \
+        -event "${triggerevent}" \
+        -callback [ah::create_js_function -body "YAHOO.util.Event.preventDefault(e);  ${varname}.show();" -parameters [list "e"] ] ]
 
-    if { $enclose_p } { set script [ah::enclose_in_script -script ${script} ] }
-
-    set showscript "${varname}.show(); "
-
-    upvar $arrayname arr
-    set arr(render) $script
-    set arr(show) $showscript
+    global ajax_helper_init_scripts
+    append ajax_helper_init_scripts $script
 
 }
 
@@ -600,10 +620,9 @@ ad_proc -public ah::yui::contextmenu {
     -varname:required
     -id:required
     -menulist:required
-    {-enclose:boolean}
     {-css ""}
     {-options ""}
-    {-trigger "document"}
+    {-triggerel "document"}
     {-renderin "document.body"}
 } {
     Generates the javascript to create a YUI context menu from a tcl list.
@@ -615,34 +634,134 @@ ad_proc -public ah::yui::contextmenu {
     @param varname The javascript variable to represent the menu object.
     @param menulist A list of lists with the parameters this script needs to generate your menu.
     @param id The html id the menu element.
-    @param enclose Specify this if you want to enclose the entire script in script tags.
     @param css Specify the full path to a css style sheet file to use an alternative to the menu.css that is used.
     @param options Additional options that you want to pass to the javascript object constructor.
+    @param triggerel What element on the page which when right clicked will show the contextmenu
+    @param renderin The element on the html page where the menu will be rendered. Default is the body of the page.
 
 } {
 
-    ah::yui::requires -sources "utilities,menu"
+    ah::yui::requires -sources "menu,container,overlay"
+
+    if { [exists_and_not_null css] } { template::head::add_css -href $css }
 
     set jsonlist [ah::yui::menu_list_to_json -lists_of_pairs $menulist]
 
-    set initoptions "trigger: ${trigger}"
+    set initoptions "trigger: ${triggerel}, lazyload:true"
     if { [exists_and_not_null options] } {
         set options "${initoptions},${options}"
     } else {
         set options "${initoptions}"
     }
 
+    append options ", itemdata: \[${jsonlist}\]"
+
     set script "var $varname = new YAHOO.widget.ContextMenu(\"${id}\", { ${options} } ); "
-    append script "$varname.addItems(\[${jsonlist}\]); "
-    append script "$varname.render(${renderin}); "
 
-    set script [ah::yui::addlistener \
-        -element "window" \
-        -event "load" \
-        -callback [ah::create_js_function -body ${script}] \
-        -element_is_var ]
+    global ajax_helper_init_scripts
 
-    if { $enclose_p } { set script [ah::enclose_in_script -script ${script} ] }
-    return ${script}
+    append ajax_helper_init_scripts ${script}
 
 }
+
+ad_proc -public ah::yui::autocomplete {
+    -varname:required
+    -id:required
+    -inputid:required
+    -suggestlist:required
+    {-delimchar ","}
+    {-useiframe "true"}
+    {-maxresults "20"}
+    {-forceselection "false"}
+    {-events {}}
+} {
+    Generates the javascript to create a YUI autocomplete object from a tcl list
+    http://developer.yahoo.com/yui/autocomplete/
+
+    @author Hamilton Chua (ham@solutiongrove.com)
+    @creation-date 2006-12-25
+
+    @param varname The javascript variable to represent the autocomplete object.
+    @param suggestlist A list or a list of lists with the values that will act as the datasource for the autocomplete object.
+    @param id The html id of that the autosuggest component will use to present suggestions. IMPORTANT : The html element with this id should already be in the adp page. e.g if id is oAutoContainer then your html document should already have "<div id='oAutoContainer'></div>" in it
+    @param inputid The id of the input text box that the user will type in
+    @param options Additional options that you want to pass to the javascript object constructor
+
+} {
+
+    ah::yui::requires -sources "autocomplete"
+
+    if { [llength $suggestlist] > 0 } {
+
+        # check if we have a list of lists
+        if { [llength [lindex $suggestlist 0]] > 1} {
+
+            # yes , let's create the array for the innerlist and put each array into one big array
+            set outerlist [list]
+            foreach onelist $suggestlist {
+                set escaped_list [list]
+                foreach elm $onelist {
+                    lappend escaped_list [string map {' \\'} $elm]
+                }
+
+                lappend outerlist "\[ '[join $escaped_list "','"]' \]"
+            }
+            set script "var ${varname}Arr = \[ [join $outerlist ","] \];"
+            set markup [list]
+            for { set x 0} { $x < [llength [lindex $suggestlist 0]] } { incr x} {
+                lappend markup "oResultItem\[${x}\]"
+            }
+            set markup [join $markup "+\" \"+"]
+            set format "${varname}.formatResult=function(oResultItem, sQuery) { var sMarkup=${markup}; return sMarkup; };"
+
+        } else {
+    
+            # no, transform the list into an array
+            set script "var ${varname}Arr = \[ '[join $suggestlist "','"]' \];"
+            set format ""
+        }
+    
+        # create the datasource object
+        append script "var ${varname}DS = new YAHOO.widget.DS_JSArray(${varname}Arr);"
+    
+        # create autocomplete object with some predefined options
+        append script "if (document.getElementById('${inputid}')) {"
+        append script "var ${varname} = new YAHOO.widget.AutoComplete('${inputid}','${id}', ${varname}DS);"
+        append script "${varname}.animHoriz=false;"
+        append script "${varname}.animVert=false;"
+        append script "${varname}.queryDelay=0;"
+        append script "${varname}.maxResultsDisplayed=${maxresults};"
+        append script "${varname}.useIFrame=${useiframe};"
+        append script "${varname}.delimChar=\"${delimchar}\";"
+
+        append script "${varname}.forceSelection=\"${forceselection}\";"
+		append script "${varname}.allowBrowserAutocomplete=false;"
+		append script "${varname}.typeAhead=true;"
+		append script ${format}
+
+#        append script "${varname}.doBeforeExpandContainer = function(oTextbox, oContainer, sQuery, aResults) {var pos = YAHOO.util.Dom.getXY(oTextbox);pos\[1\] += YAHOO.util.Dom.get(oTextbox).offsetHeight;YAHOO.util.Dom.setXY(oContainer,pos);YAHOO.util.Dom.setStyle(oContainer,'overflow-y','auto');YAHOO.util.Dom.setStyle(oContainer,'overflow-x','hidden');YAHOO.util.Dom.setStyle(oContainer,'position','absolute');YAHOO.util.Dom.setStyle(oContainer,'height','150px');YAHOO.util.Dom.setStyle(oContainer,'z-index','100');return true;};"
+#        append script ${format}
+#        append script "${varname}.containerCollapseEvent.subscribe([ah::create_js_function -body "YAHOO.util.Dom.setStyle('${id}', 'height', 0)" -parameters [list "type" "args"] ]);"
+#        append script "${varname}.itemArrowToEvent.subscribe([ah::create_js_function -body "elItem\[1\].scrollIntoView(false)" -parameters [list "oSelf" "elItem"] ]); "
+
+         foreach {name value} $events {
+            append script "${varname}.${name}.subscribe${value};\n"
+        }
+       
+        # prevent the container from overlapping other elements, e.g. buttons, links
+
+		# remove the yui-ac-input class
+        append script [ah::yui::cssclass \
+            -varname "yuiinputclass${varname}" \
+            -action "remove" \
+            -element ${inputid} \
+            -classname "yui-ac-input" ]
+            
+        append script "}; "
+    
+        global ajax_helper_init_scripts
+        append ajax_helper_init_scripts $script
+    }
+
+}
+

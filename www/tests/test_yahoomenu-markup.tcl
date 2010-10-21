@@ -3,14 +3,15 @@
 
 # generate the code
 ah::yui::menu_from_markup \
-    -varname "mymenu" \
-    -markupid "testmenu" \
-    -arrayname "yuimenu" \
-    -enclose \
-    -options "context:new Array(\"showmenu\",\"tl\",\"bl\")"
+    -varname "mymenu1" \
+    -markupid "testmenu1" \
+    -triggerel "showmenu1" \
+    -triggerevent "click" \
+    -options "context:new Array(\"showmenu1\",\"tl\",\"bl\")"
 
-# get the render and show values of the resulting array
-set js_script $yuimenu(render)
-
-# get the action script that triggers the display of the menu
-set action_script $yuimenu(show)
+ah::yui::menu_from_markup \
+    -varname "mymenu2" \
+    -markupid "testmenu2" \
+    -triggerel "showmenu2" \
+    -triggerevent "click" \
+    -options "context:new Array(\"showmenu2\",\"tl\",\"bl\")"
