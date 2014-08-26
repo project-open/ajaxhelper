@@ -103,7 +103,7 @@ function(){
 	effectUnits: 2,
 	
 	// itemPadding: Integer
-	//	padding (in pixels) betweeen each menu item
+	//	padding (in pixels) between each menu item
 	itemPadding: 10,
 
 	// attachEdge: String
