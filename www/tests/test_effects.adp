@@ -1,5 +1,5 @@
 <master>
-<property name="title"> Test Effects </property>
+<property name="doc(title)"> Test Effects </property>
 
 <a href="javascript:void(0)" onclick="@showscript;noquote@"> Show </a> | <a href="javascript:void(0)" onclick="@fadescript;noquote@"> Hide </a>
 <br /><br />

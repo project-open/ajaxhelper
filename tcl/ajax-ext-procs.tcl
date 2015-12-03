@@ -71,9 +71,9 @@ ad_proc -public ah::ext::ajax {
 
 } {
     set script "Ext.Ajax.request({url:\"$url\""
-    if { [exists_and_not_null params] } { append script ",params:$params" }
-    if { [exists_and_not_null success] } { append script ",success:$success" }
-    if { [exists_and_not_null failure] } { append script ",failure:$failure" }
+    if { ([info exists params] && $params ne "") } { append script ",params:$params" }
+    if { ([info exists success] && $success ne "") } { append script ",success:$success" }
+    if { ([info exists failure] && $failure ne "") } { append script ",failure:$failure" }
     append script  "}); "
     return $script
 }

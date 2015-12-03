@@ -1,5 +1,5 @@
 <master>
-<property name="title"> TEST : Dojo Chart Engine </property>
+<property name="doc(title)"> TEST : Dojo Chart Engine </property>
 
 <pre>
 @testjs;noquote@

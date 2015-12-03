@@ -1,4 +1,4 @@
 <master>
-<property name="title">Progress Bar</property>
+<property name="doc(title)">Progress Bar</property>
 
 @script;noquote@

@@ -164,7 +164,7 @@ ad_proc -public ah::js_sources {
     }
 
     # js_sources was called with no parameters, just load the defaults
-    if { $source == "default" } {
+    if { $source eq "default" } {
         if { ![ah::is_js_sources_loaded -js_source "prototype"] } {
                 # load prototype
                 template::head::add_javascript -src "${ah_base_url}prototype/prototype${minsuffix}.js"
@@ -320,7 +320,7 @@ ad_proc -private ah::enclose_in_script {
 ad_proc -public ah::create_js_function {
 	-body:required
 	{-name ""}
-	{-parameters {} }
+	{-parameters "" }
 } {
 	Helper procedure to generate a javascript function
 	@author Hamilton Chua (ham@solutiongrove.com)
@@ -331,7 +331,7 @@ ad_proc -public ah::create_js_function {
 	@param parameters The comma separated list of parameters of the javascript function
 } {
 	set script "function ${name} ("
-	if { [exists_and_not_null parameters] } { append script [join $parameters ","] }
+	if { $parameters ne "" } { append script [join $parameters ","] }
 	append script ") \{ $body \}"
 	return $script
 }
@@ -441,10 +441,10 @@ ad_proc -public ah::ajaxperiodical {
 
 	set preoptions "asynchronous:${asynchronous},frequency:${frequency},method:'post'"
 
-	if { [exists_and_not_null pars] } {
+	if { $pars ne "" } {
 		append preoptions ",parameters:$pars"
 	}
-	if { [exists_and_not_null options] } { append preoptions ",$options" }
+	if { $options ne "" } { append preoptions ",$options" }
 	set script "new Ajax.PeriodicalUpdater('$container','$url',{$preoptions}); "
 
 	return $script
@@ -477,10 +477,10 @@ ad_proc -public ah::ajaxrequest {
 
 	set preoptions "asynchronous:${asynchronous},method:'post'"
 
-	if { [exists_and_not_null pars] } {
+	if { $pars ne "" } {
 		append preoptions ",parameters:$pars"
 	}
-	if { [exists_and_not_null options] } { append preoptions ",$options" }
+	if { $options ne "" } { append preoptions ",$options" }
 	set script "new Ajax.Request('$url',{$preoptions}); "
 
 	return $script
@@ -535,12 +535,12 @@ ad_proc -public ah::ajaxupdate {
 
 	set preoptions "asynchronous:$asynchronous,method:'post'"
 
-	if { [exists_and_not_null pars] } {
+	if { $pars ne "" } {
 		append preoptions ",parameters:$pars"
 	}
-	if { [exists_and_not_null options] } { append preoptions ",$options" }
+	if { $options ne "" } { append preoptions ",$options" }
 
-	if { [exists_and_not_null effect] } {
+	if { $effect ne "" } {
 		set effects_script [ah::effects -element $container -effect $effect -options $effectopts -element_is_var]
 		append preoptions ",onSuccess: function(t) { $effects_script }"
 	}
@@ -579,7 +579,7 @@ ad_proc -public ah::popup {
 
     ah::requires -sources "overlibmws"
 
-	if { [exists_and_not_null options] } {
+	if { $options ne "" } {
 		set overlibopt ","
 		append overlibopt $options
 	} else {
@@ -941,7 +941,7 @@ ad_proc -public ah::generate_autosuggest_array {
 
     if {[llength $array_list]} {
 	set suggestion_list $array_list
-    } elseif {![string equal $sql_query {}]} {
+    } elseif {$sql_query ne {} } {
 	set suggestion_list [db_list_of_lists get_array_list $sql_query]
     } else {
 	# just do something for failover

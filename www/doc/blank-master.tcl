@@ -59,7 +59,7 @@ ad_page_contract {
   $Id$
 }
 
-if {[template::util::is_nil doc(type)]} { 
+if {![info exists doc(type)]} { 
     set doc(type) {<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">}
 }
 
@@ -67,7 +67,7 @@ if {![info exists doc(title)]} {
     set doc(title) "[ad_conn instance_name]"
     ns_log warning "[ad_conn url] has no doc(title) set."
 }
-if {[template::util::is_nil doc(charset)]} {
+if {![info exists doc(charset)]} {
     set doc(charset) [ns_config ns/parameters OutputCharset [ad_conn charset]]
 }
 

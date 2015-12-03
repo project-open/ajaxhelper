@@ -1,5 +1,5 @@
 <master>
-<property name="title"> TEST : DOM Insert </property>
+<property name="doc(title)"> TEST : DOM Insert </property>
 
 <div id="maindiv">The quick brown fox jumped over the </div>
 <br>

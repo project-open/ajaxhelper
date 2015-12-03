@@ -1,5 +1,5 @@
 <master>
-<property name="title"> TEST : Ajax </property>
+<property name="doc(title)"> TEST : Ajax </property>
 
 Type your name please : <input type="text" id="name" />
 <br>

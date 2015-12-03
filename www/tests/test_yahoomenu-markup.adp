@@ -1,5 +1,5 @@
 <master>
-<property name="title"> TEST : Yahoo Menu from Markup</property>
+<property name="doc(title)"> TEST : Yahoo Menu from Markup</property>
 
 <center><a href="javascript:void(0)" id="showmenu1">Show Menu 1</a>&nbsp;<a href="javascript:void(0)" id="showmenu2">Show Menu 2</a></center>
 

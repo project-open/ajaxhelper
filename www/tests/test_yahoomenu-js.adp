@@ -1,5 +1,5 @@
 <master>
-<property name="title"> TEST : Yahoo Menu from TCL List</property>
+<property name="doc(title)"> TEST : Yahoo Menu from Tcl List</property>
 <property name="head">
 <style>
 #samplemenu li {

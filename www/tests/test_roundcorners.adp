@@ -1,5 +1,5 @@
 <master>
-<property name="title"> TEST : Rounded Corners </property>
+<property name="doc(title)"> TEST : Rounded Corners </property>
 <property name="head">
 	<style>
 	.myBox{

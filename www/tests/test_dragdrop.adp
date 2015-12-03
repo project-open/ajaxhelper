@@ -1,5 +1,5 @@
 <master>
-<property name="title">TEST : Drag n Drop</property>
+<property name="doc(title)">TEST : Drag n Drop</property>
 
 <div id="test" class="portlet" style="position:absolute;
 			background-color:gray;

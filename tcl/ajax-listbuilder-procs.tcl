@@ -52,7 +52,7 @@ ad_proc ah::lb::add_column_menu {
     set groupbys [list]
     foreach elm $groupby_ref(values) {
 	set value [lindex $elm 1]
-        lappend groupbys [lindex [lindex $value 0] 1]
+        lappend groupbys [lindex $value 0 1]
     }
 
     foreach {name value} [array get list_properties] {
@@ -199,7 +199,7 @@ ad_proc ah::lb::add_add_column_menu {
 	    }
     }
     if {[llength $addcolumnlist]} {
-	set actions_count [expr [llength $list_properties(actions)] / 3]
+	set actions_count [expr {[llength $list_properties(actions)] / 3}]
 	ah::yui::menu_from_list -varname "oMenuAddColumn" \
 	    -id "menuAddColumn" \
 	    -menulist $addcolumnlist \
@@ -396,7 +396,7 @@ ad_proc ah::lb::prepare_template {
 	    }
 	}
 
-	if {[exists_and_not_null __list_view]} {
+	if {([info exists __list_view] && $__list_view ne "")} {
 	    ad_form -extend -name save_view -form {
 		{formbutton_delete:text(submit) {label "[_ acs-kernel.common_Delete]"}}
 	    }
@@ -406,13 +406,13 @@ ad_proc ah::lb::prepare_template {
 		element set_value save_view save_view $__list_view
 	    }
 	} -on_submit {
-	    if {[exists_and_not_null formbutton_delete]} {
+	    if {([info exists formbutton_delete] && $formbutton_delete ne "")} {
 		ad_returnredirect [export_vars -base /ajax/list-view-delete {{list_name $___list_name} {view_name $__list_view} {return_url "[ad_conn url]"} {parent_id "[ad_conn package_id]}}]
 		ad_script_abort
 	    }
 	}
 
-	if {[exists_and_not_null save_view]} {
+	if {([info exists save_view] && $save_view ne "")} {
 	    set saved_view_id [template::list::view_save \
 				   -list_name $___list_name \
 				   -view_name $save_view \
@@ -446,7 +446,7 @@ ad_proc ah::lb::prepare_list {
 	template::list::view_set_filter_vars \
 	    -list_name $___list_name
 	set view_modified_p 0
-	if {[exists_and_not_null __list_view]} {
+	if {([info exists __list_view] && $__list_view ne "")} {
 	    set view_name $__list_view
 	    set view_title $__list_view
 

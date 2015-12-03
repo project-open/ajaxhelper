@@ -20,7 +20,6 @@ ad_proc -private ah::yui::load_js_sources {
 
     @author Hamilton Chua (ham@solutiongrove.com)
     @creation-date 2006-11-05
-    @modified-date 2007-08-12
 } {
 
     set ah_base_url "[ah::get_url]yui/"
@@ -89,10 +88,9 @@ ad_proc -private ah::yui::is_js_sources_loaded {
 	@author Hamilton Chua (ham@solutiongrove.com)
 	@creation-date 2006-11-05
 } {
-	global ajax_helper_yui_js_sources
 	set state 0
-	if { [info exists ajax_helper_yui_js_sources] } {
-		foreach source $ajax_helper_yui_js_sources {
+	if { [info exists ::ajax_helper_yui_js_sources] } {
+		foreach source $::ajax_helper_yui_js_sources {
 			if { [string match $source $js_source] } {
 				set state 1
 				break
@@ -123,7 +121,7 @@ ad_proc -private ah::yui::requires {
         # - is the source "utilities" or "yahoo","dom","event"
         if { ![ah::yui::is_js_sources_loaded -js_source $source] && [ah::yui::is_valid_source -js_source $source] } {
             # source is utilities
-            if { $source == "utilities"} {
+            if { $source eq "utilities"} {
                 # load it only if yahoo, dom and event are not loaded
                 if { ![ah::yui::is_js_sources_loaded -js_source "yahoo"] && ![ah::yui::is_js_sources_loaded -js_source "dom"] && ![ah::yui::is_js_sources_loaded -js_source "event"]} {
                     lappend ajax_helper_yui_js_sources $source
@@ -189,7 +187,7 @@ ad_proc -public ah::yui::js_sources {
     }
 
     # js_sources was called with no parameters, just load the defaults
-    if { $source == "default" } {
+    if { $source eq "default" } {
         # yahoo has a compressed js file with  yahoo, dom and event all in one file (utilities)
         if { ![ah::is_js_sources_loaded -js_source "utilities"] } {
                 append script "<script type=\"text/javascript\" src=\"${ah_base_url}utilities/utilities.js\"></script> \n"
@@ -396,7 +394,7 @@ ad_proc -public ah::yui::create_tree {
 
     ah::yui::requires -sources "dom,treeview"
 
-    if { [exists_and_not_null css] } { template::head::add_css -href $css }
+    if { $css ne "" } { template::head::add_css -href $css }
 
 	set script "var ${varname} = new YAHOO.widget.TreeView(\"${element}\"); "
 	append script "var ${varname}root = ${varname}.getRoot(); "
@@ -458,14 +456,14 @@ ad_proc -private ah::yui::create_tree_node {
 } {
 	set script "var od${varname} = {label: \"${label}\", id: \"${varname}\", href: \"${href}\"}; "
 
-	if { [exists_and_not_null attach_to_node] } {
+	if { $attach_to_node ne "" } {
 		append script "var node = ${treevarname}.getNodeByProperty('id','${attach_to_node}'); "
 		append script "if ( node == null ) { var node = nd${attach_to_node}; } "
 	} else {
 		append script "var node = ${treevarname}root; "
 	}
 
-	if { ![exists_and_not_null open] } { set open "false" }
+	if { $open eq "" } { set open "false" }
 
 	append script "var nd${varname} = new YAHOO.widget.TextNode(od${varname},node,${open}); "
 
@@ -473,7 +471,7 @@ ad_proc -private ah::yui::create_tree_node {
         append script "var dd${varname} = new YAHOO.util.DDTarget(nd${varname}.labelElId); "
     }
 
-	if { [exists_and_not_null dynamic_load] } {
+	if { $dynamic_load ne "" } {
 		append script "nd${varname}.setDynamicLoad(${dynamic_load}); "
 	}
 
@@ -506,7 +504,7 @@ ad_proc -public ah::yui::menu_from_markup {
 } {
     ah::yui::requires -sources "menu,container,overlay"
 
-    if { [exists_and_not_null css] } { template::head::add_css -href $css }
+    if { $css ne "" } { template::head::add_css -href $css }
 
     set script "${varname} = new YAHOO.widget.Menu(\"${markupid}\",{${options}}); "
     append script "${varname}.render(); "
@@ -545,7 +543,7 @@ ad_proc -public ah::yui::menu_list_to_json {
     foreach row $lists_of_pairs {
         set pairs [list]
         foreach pair $row {
-            if { [lindex $pair 0] == "submenu" } {
+            if { [lindex $pair 0] eq "submenu" } {
                 set submenulist [lindex $pair 1]
 
                 set submenuid [lindex $submenulist 0]
@@ -597,7 +595,7 @@ ad_proc -public ah::yui::menu_from_list {
 
     ah::yui::requires -sources "event,menu,container,overlay"
 
-    if { [exists_and_not_null css] } { template::head::add_css -href $css }
+    if { $css ne "" } { template::head::add_css -href $css }
 
     set jsonlist [ah::yui::menu_list_to_json -lists_of_pairs $menulist]
 
@@ -643,12 +641,12 @@ ad_proc -public ah::yui::contextmenu {
 
     ah::yui::requires -sources "menu,container,overlay"
 
-    if { [exists_and_not_null css] } { template::head::add_css -href $css }
+    if { $css ne "" } { template::head::add_css -href $css }
 
     set jsonlist [ah::yui::menu_list_to_json -lists_of_pairs $menulist]
 
     set initoptions "trigger: ${triggerel}, lazyload:true"
-    if { [exists_and_not_null options] } {
+    if { $options ne "" } {
         set options "${initoptions},${options}"
     } else {
         set options "${initoptions}"

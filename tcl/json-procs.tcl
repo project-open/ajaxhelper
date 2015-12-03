@@ -195,7 +195,7 @@ proc json::_json2dict {{txtvar txt}} {
         # but it may be 0.xxx
         string is double -failindex last $txt
         if {$last > 0} {
-        set num [string range $txt 0 [expr {$last - 1}]]
+        set num [string range $txt 0 $last-1]
         set txt [string range $txt $last end]
         switch -- $state {
             TOP {
