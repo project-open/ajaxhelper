@@ -107,7 +107,7 @@ ad_proc adp_parse_ad_conn_file {} {
         # acs-lang translator mode
         #
 
-        if { [lang::util::translator_mode_p] } {
+        if { "1" eq [lang::util::translator_mode_p] } {
             
             # Attempt to move all message keys outside of tags
             while { [regsub -all {(<[^>]*)(\x002\(\x001[^\x001]*\x001\)\x002)([^>]*>)} $parsed_template {\2\1\3} parsed_template] } {}
