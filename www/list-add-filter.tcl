@@ -1,7 +1,7 @@
 ad_page_contract {
     Add a filter to saved filter view for a list builder list
 } {
-    return_url
+    return_url:localurl
     list_name
     {filter_name ""} 
     {filter_names ""}

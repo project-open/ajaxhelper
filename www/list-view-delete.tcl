@@ -3,7 +3,7 @@ ad_page_contract {
 } {
     list_name
     view_name
-    return_url
+    return_url:localurl
     parent_id:naturalnum,notnull
 }
 

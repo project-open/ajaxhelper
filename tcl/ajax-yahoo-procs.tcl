@@ -12,7 +12,7 @@ namespace eval ah::yui { }
 ad_proc -private ah::yui::load_js_sources {
     -source_list
 } {
-    Accepts a tcl list of sources to load.
+    Accepts a Tcl list of sources to load.
     This source_list will be the global ajax_helper_yui_js_sources variable.
     This script is called in the blank-master template.
     As of 0.86d with YUI 2.3.0, this proc now uses the Yahoo Loader Utility to
@@ -575,7 +575,7 @@ ad_proc -public ah::yui::menu_from_list {
     {-options ""}
     {-renderin "document.body"}
 } {
-    Generates the javascript to create a YUI menu from a tcl list.
+    Generates the javascript to create a YUI menu from a Tcl list.
 
     http://developer.yahoo.com/yui/menu/
 
@@ -623,7 +623,7 @@ ad_proc -public ah::yui::contextmenu {
     {-triggerel "document"}
     {-renderin "document.body"}
 } {
-    Generates the javascript to create a YUI context menu from a tcl list.
+    Generates the javascript to create a YUI context menu from a Tcl list.
     http://developer.yahoo.com/yui/menu/
 
     @author Hamilton Chua (ham@solutiongrove.com)
@@ -673,7 +673,7 @@ ad_proc -public ah::yui::autocomplete {
     {-forceselection "false"}
     {-events {}}
 } {
-    Generates the javascript to create a YUI autocomplete object from a tcl list
+    Generates the javascript to create a YUI autocomplete object from a Tcl list
     http://developer.yahoo.com/yui/autocomplete/
 
     @author Hamilton Chua (ham@solutiongrove.com)

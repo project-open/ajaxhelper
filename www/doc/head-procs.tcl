@@ -56,7 +56,7 @@ ad_proc -public template::head::add_script {
     users client.  A script library in an external file may only be included 
     once; subsequent calls to add_script will replace the existing entry.  
     Anonymous script blocks will be added without checking for duplicates; the 
-    caller must ensure that anonymous script blocks are not inadvertantly added 
+    caller must ensure that anonymous script blocks are not inadvertently added 
     multiple times.  You <strong>must</strong> supply either src or script.
 
     @param type    the type attribute of the script tag, eg. 'text/javascript'

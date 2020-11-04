@@ -1,4 +1,4 @@
-# demonstrates how to create YUI Menu using a properly formatted tcl list
+# demonstrates how to create YUI Menu using a properly formatted Tcl list
 
 # Menu 1
 

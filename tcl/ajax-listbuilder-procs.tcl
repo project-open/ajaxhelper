@@ -170,7 +170,7 @@ ad_proc ah::lb::add_add_column_menu {
     @param list_name template::list list name
     @param allowed_elements List of element names that may appear in add
     column dropdown
-    @parma add_url_var Name of URL variable to use to add the choosen column
+    @parma add_url_var Name of URL variable to use to add the chosen column
     @param -hidden_elements List of hidden elements that should be passed in the 
 } {
     if {$return_url eq ""} {

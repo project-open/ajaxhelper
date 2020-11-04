@@ -12,7 +12,7 @@ namespace eval ah::dojo { }
 ad_proc -private ah::dojo::load_js_sources {
 	-source_list
 } {
-	Accepts a tcl list of sources to load.
+	Accepts a Tcl list of sources to load.
 	This source_list will be the global ajax_helper_dojo_js_sources variable.
 	This script is called in the blank-master template.
 
